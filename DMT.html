@@ -102,7 +102,8 @@
   // =========================
   let fClickCount = 0;
 
-
+let trialNumber = 0;
+let trialResults = [];
   // =========================
   // Day별 Dot 위치
   // =========================
@@ -220,6 +221,8 @@
     type: jsPsychHtmlKeyboardResponse,
 
     stimulus: function() {
+
+  trialNumber++;
 
       encoding_positions =
         predefinedEncodingPositions[currentSetIndex];
@@ -526,24 +529,50 @@ doneButton.addEventListener(
   };
 
 
-  // =========================
-  // 저장
-  // =========================
-  const save_data = {
+// =========================
+// 저장
+// =========================
+const save_data = {
 
-    type: jsPsychPipe,
+  type: jsPsychPipe,
 
-    action: "save",
+  action: "save",
 
-    experiment_id: expID,
+  experiment_id: expID,
 
-    filename: () =>
-      `dot_${participant_id}_day${dayNumber}.csv`,
+  filename: () =>
+    `dot_${participant_id}_day${dayNumber}.csv`,
 
-    data_string: () =>
-      jsPsych.data.get().csv()
+  data_string: function() {
 
-  };
+    const headers = [
+      "participant_id",
+      "day",
+      "trial",
+      "encoding_positions",
+      "f_click_count",
+      "response"
+    ];
+
+    let csv = headers.join(",") + "\n";
+
+    trialResults.forEach(row => {
+
+      csv += [
+        row.participant_id,
+        row.day,
+        row.trial,
+        `"${row.encoding_positions.replace(/"/g, '""')}"`,
+        row.f_click_count,
+        `"${row.response.replace(/"/g, '""')}"`
+      ].join(",") + "\n";
+
+    });
+
+    return "\uFEFF" + csv;
+  }
+
+};
 
 
   // =========================
