@@ -451,42 +451,68 @@
         });
 
 
-      doneButton.addEventListener(
-        "click",
-        () => {
+doneButton.addEventListener(
+  "click",
+  () => {
 
-          if (userSelections.length === 3) {
+    if (userSelections.length === 3) {
 
-            jsPsych.finishTrial({
+      // 선택한 cell index를 [x,y] 좌표로 변환
+      const response_positions =
+        userSelections.map(index => {
 
-              task: "retrieval",
+          const x = index % 5;
+          const y = Math.floor(index / 5);
 
-              participant_id:
-                participant_id,
-
-              day:
-                dayNumber,
-
-              response:
-                JSON.stringify(
-                  userSelections
-                ),
-
-              encoding_positions:
-                JSON.stringify(
-                  encoding_positions
-                )
-
-            });
-
-          }
+          return [x, y];
 
         });
 
+
+      trialResults.push({
+
+        participant_id: participant_id,
+
+        day: dayNumber,
+
+        trial: trialNumber,
+
+        encoding_positions:
+          JSON.stringify(encoding_positions),
+
+        f_click_count:
+          fClickCount,
+
+        response:
+          JSON.stringify(response_positions)
+
+      });
+
+
+      jsPsych.finishTrial({
+
+        task: "retrieval",
+
+        participant_id:
+          participant_id,
+
+        day:
+          dayNumber,
+
+        trial:
+          trialNumber,
+
+        response:
+          JSON.stringify(response_positions),
+
+        encoding_positions:
+          JSON.stringify(encoding_positions)
+
+      });
+
     }
 
-  };
-
+  });
 
   const debrief = {
 
