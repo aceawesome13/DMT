@@ -8,7 +8,7 @@
   <script src="https://unpkg.com/jspsych@7.3.2"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.2"></script>
-  <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
+ <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.2"></script>
   <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.2"></script>
 
@@ -78,11 +78,27 @@
 
 <script>
 
-  const jsPsych = initJsPsych({
-    on_finish: function() {
-      console.log(jsPsych.data.get().values());
+ const jsPsych = initJsPsych({
+
+  extensions: [
+    {
+      type: jsPsychExtensionPipe,
+      params: {
+
+        experiment_id: "8vGt7oHuZjuJ",
+
+        filename: () =>
+          `dot_${participant_id}_day${dayNumber}.csv`
+
+      }
     }
-  });
+  ],
+
+  on_finish: function() {
+    console.log(jsPsych.data.get().values());
+  }
+
+});
 
 
   const expID = "8vGt7oHuZjuJ";
@@ -141,7 +157,7 @@ let trialResults = [];
 
   const fullscreen = {
     type: jsPsychFullscreen,
-    message: '<p style="font-size: 24px;">1全画表示に切り替えます</p>',
+    message: '<p style="font-size: 24px;">2全画表示に切り替えます</p>',
     button_label: "開始",
     fullscreen_mode: true
   };
@@ -535,45 +551,6 @@ const retrieval = {
 // =========================
 const save_data = {
 
-  type: jsPsychPipe,
-
-  action: "save",
-
-  experiment_id: expID,
-
-  filename: () =>
-    `dot_${participant_id}_day${dayNumber}.csv`,
-
-  data_string: function() {
-
-    const headers = [
-      "participant_id",
-      "day",
-      "trial",
-      "encoding_positions",
-      "f_click_count",
-      "response"
-    ];
-
-    let csv = headers.join(",") + "\n";
-
-    trialResults.forEach(row => {
-
-      csv += [
-        row.participant_id,
-        row.day,
-        row.trial,
-        `"${row.encoding_positions.replace(/"/g, '""')}"`,
-        row.f_click_count,
-        `"${row.response.replace(/"/g, '""')}"`
-      ].join(",") + "\n";
-
-    });
-
-    return "\uFEFF" + csv;
-  }
-
-};
 
 
   // =========================
@@ -591,7 +568,7 @@ const save_data = {
 
 
   // 하루 3 trial
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
 
     timeline.push(encoding);
 
@@ -605,9 +582,6 @@ const save_data = {
 
 
   timeline.push(debrief);
-
-  timeline.push(save_data);
-
 
   jsPsych.run(timeline);
 
