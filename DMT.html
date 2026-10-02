@@ -731,62 +731,60 @@ const distraction = {
   type:
     jsPsychHtmlKeyboardResponse,
 
+stimulus: function() {
 
-  stimulus: function() {
+  let html =
 
+    '<p style="font-size:24px;">' +
 
-    let html =
+    'Fを押してください' +
 
-      '<p style="font-size:24px;">' +
+    '</p>' +
 
-      'Fを押してください' +
-
-      '</p>' +
-
-      '<div class="grid">';
+    '<div class="grid">';
 
 
+  // F 18개 + E 12개
+  let letters = [];
 
-    for (
-      let i = 0;
-      i < 30;
-      i++
-    ) {
+  // F 18개
+  for (let i = 0; i < 18; i++) {
+    letters.push("F");
+  }
 
+  // E 12개
+  for (let i = 0; i < 12; i++) {
+    letters.push("E");
+  }
 
-      const letter =
-
-        Math.random() < 0.6
-        ?
-        "F"
-        :
-        "E";
-
-
-      html += `
-
-        <div
-
-          class="distraction-cell"
-
-          data-letter="${letter}">
-
-          ${letter}
-
-        </div>
-
-      `;
-
-    }
+  // 랜덤하게 섞기
+  letters =
+    jsPsych.randomization.shuffle(letters);
 
 
-    html +=
-      "</div>";
+  // 화면에 표시
+  for (let i = 0; i < 30; i++) {
+
+    const letter =
+      letters[i];
+
+    html += `
+      <div
+        class="distraction-cell"
+        data-letter="${letter}">
+        ${letter}
+      </div>
+    `;
+  }
 
 
-    return html;
+  html +=
+    "</div>";
 
-  },
+
+  return html;
+
+},
 
 
   choices:
