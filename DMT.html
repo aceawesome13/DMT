@@ -546,24 +546,14 @@ const retrieval = {
   };
 
 
-// =========================
-// 저장
-// =========================
-const save_data = {
-
-
 
   // =========================
   // Timeline
   // =========================
   const timeline = [];
-
   timeline.push(fullscreen);
-
   timeline.push(form_trial);
-
   timeline.push(welcome);
-
   timeline.push(instruction);
 
 
@@ -571,11 +561,8 @@ const save_data = {
   for (let i = 0; i < 2; i++) {
 
     timeline.push(encoding);
-
     timeline.push(distraction);
-
     timeline.push(rest_20s);
-
     timeline.push(retrieval);
 
   }
@@ -583,7 +570,7 @@ const save_data = {
 
   timeline.push(debrief);
 
-  jsPsych.run(timeline);
+
 
 </script>
 
