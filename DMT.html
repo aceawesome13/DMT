@@ -373,132 +373,150 @@ let trialResults = [];
   };
 
 
-  // =========================
-  // Retrieval
-  // =========================
-  const retrieval = {
+const retrieval = {
 
-    type: jsPsychHtmlKeyboardResponse,
+  type: jsPsychHtmlKeyboardResponse,
 
-    stimulus: function() {
+  stimulus: function() {
 
-      userSelections = [];
+    userSelections = [];
 
-      let html = `
-        <p style="font-size: 24px;">
-          点はどこにありましたか？
-        </p>
+    let html = `
+      <p style="font-size: 24px;">
+        点はどこにありましたか？
+      </p>
 
-        <div class="grid">
-      `;
+      <div class="grid">
+    `;
 
-      for (let i = 0; i < 25; i++) {
-
-        html += `
-          <div
-            class="cell"
-            data-index="${i}">
-          </div>
-        `;
-      }
+    for (let i = 0; i < 25; i++) {
 
       html += `
+        <div
+          class="cell"
+          data-index="${i}">
         </div>
-
-        <button id="done" disabled>
-          完了
-        </button>
       `;
+    }
 
-      return html;
-    },
+    html += `
+      </div>
 
-    choices: "NO_KEYS",
+      <button id="done" disabled>
+        完了
+      </button>
+    `;
+
+    return html;
+  },
+
+  choices: "NO_KEYS",
+
+  on_load: function() {
+
+    const doneButton =
+      document.getElementById("done");
+
+    document
+      .querySelectorAll(".cell")
+      .forEach((cell, i) => {
+
+        cell.addEventListener("click", () => {
+
+          if (cell.querySelector(".circle")) {
+
+            cell.innerHTML = "";
+
+            userSelections =
+              userSelections.filter(
+                x => x !== i
+              );
+
+          } else {
+
+            cell.innerHTML =
+              "<div class='circle'></div>";
+
+            userSelections.push(i);
+
+          }
+
+          doneButton.disabled =
+            (userSelections.length !== 3);
+
+        });
+
+      });
 
 
-    on_load: function() {
+    doneButton.addEventListener(
+      "click",
+      () => {
 
-      const doneButton =
-        document.getElementById("done");
+        if (userSelections.length === 3) {
+
+          // index를 [x,y] 좌표로 변환
+          const response_positions =
+            userSelections.map(index => {
+
+              const x = index % 5;
+              const y = Math.floor(index / 5);
+
+              return [x, y];
+
+            });
 
 
-      document
-        .querySelectorAll(".cell")
-        .forEach((cell, i) => {
+          // 한 trial의 결과 저장
+          trialResults.push({
 
-          cell.addEventListener("click", () => {
+            participant_id: participant_id,
 
-            if (cell.querySelector(".circle")) {
+            day: dayNumber,
 
-              cell.innerHTML = "";
+            trial: trialNumber,
 
-              userSelections =
-                userSelections.filter(
-                  x => x !== i
-                );
+            encoding_positions:
+              JSON.stringify(encoding_positions),
 
-            } else {
+            f_click_count:
+              fClickCount,
 
-              cell.innerHTML =
-                "<div class='circle'></div>";
-
-              userSelections.push(i);
-
-            }
-
-            doneButton.disabled =
-              (userSelections.length !== 3);
+            response:
+              JSON.stringify(response_positions)
 
           });
 
-        });
 
+          // retrieval trial 종료
+          jsPsych.finishTrial({
 
-doneButton.addEventListener(
-  "click",
-  () => {
+            task: "retrieval",
 
-    if (userSelections.length === 3) {
+            participant_id:
+              participant_id,
 
-      // 선택한 cell index를 [x,y] 좌표로 변환
-      const response_positions =
-        userSelections.map(index => {
+            day:
+              dayNumber,
 
-          const x = index % 5;
-          const y = Math.floor(index / 5);
+            trial:
+              trialNumber,
 
-          return [x, y];
+            response:
+              JSON.stringify(response_positions),
 
-        });
+            encoding_positions:
+              JSON.stringify(encoding_positions)
 
+          });
 
-      trialResults.push({
+        }
 
-        participant_id: participant_id,
-
-        day: dayNumber,
-
-        trial: trialNumber,
-
-        encoding_positions:
-          JSON.stringify(encoding_positions),
-
-        f_click_count:
-          fClickCount,
-
-        response:
-          JSON.stringify(response_positions)
-
-  
       });
 
-    }
+  }
 
-  });
-
-    }   // ← on_load 끝
-
-  }; 
+};
 
 
       jsPsych.finishTrial({
