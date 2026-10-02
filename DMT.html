@@ -1,532 +1,714 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
   <title>Dot Memory</title>
 
+
+  <!-- jsPsych -->
   <script src="https://unpkg.com/jspsych@7.3.2"></script>
+
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.2"></script>
- <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.2"></script>
+
   <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.2"></script>
 
-  <link href="https://unpkg.com/jspsych@7.3.2/css/jspsych.css" rel="stylesheet" />
+  <!-- DataPipe -->
+  <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
+
+
+  <link
+    href="https://unpkg.com/jspsych@7.3.2/css/jspsych.css"
+    rel="stylesheet"
+  />
+
 
   <style>
+
     .grid {
+
       display: grid;
-      grid-template-columns: repeat(5, 60px);
+
+      grid-template-columns:
+        repeat(5, 60px);
+
       gap: 5px;
+
       justify-content: center;
+
       margin: 20px auto;
+
     }
+
 
     .cell {
+
       width: 60px;
+
       height: 60px;
+
       border: 1px solid black;
+
       position: relative;
+
       display: flex;
+
       align-items: center;
+
       justify-content: center;
+
       font-size: 28px;
+
       cursor: pointer;
+
       user-select: none;
+
     }
+
 
     .distraction-cell {
+
       width: 60px;
+
       height: 60px;
+
       border: none;
+
       position: relative;
+
       display: flex;
+
       align-items: center;
+
       justify-content: center;
+
       font-size: 28px;
+
       cursor: pointer;
+
       user-select: none;
+
     }
+
 
     .circle {
+
       width: 35px;
+
       height: 35px;
+
       background: red;
+
       border-radius: 50%;
+
       position: absolute;
+
       top: 50%;
+
       left: 50%;
-      transform: translate(-50%, -50%);
+
+      transform:
+        translate(-50%, -50%);
+
     }
+
 
     #done {
+
       display: block;
+
       margin: 20px auto;
+
       padding: 10px 20px;
+
       font-size: 20px;
+
     }
+
 
     .jspsych-btn {
+
       font-size: 20px;
+
       padding: 10px 20px;
+
     }
+
+
+    /* ID / Day 입력화면 */
+
+    #start-screen {
+
+      text-align: center;
+
+      margin-top: 100px;
+
+      font-size: 24px;
+
+    }
+
+
+    #start-screen input {
+
+      font-size: 22px;
+
+      padding: 8px;
+
+      width: 180px;
+
+      text-align: center;
+
+    }
+
+
+    #start-screen button {
+
+      font-size: 22px;
+
+      padding: 10px 25px;
+
+      margin-top: 20px;
+
+    }
+
   </style>
+
 </head>
 
-<body></body>
+
+<body>
+
+
+  <!-- ========================= -->
+  <!-- ID + Day 입력 화면 -->
+  <!-- ========================= -->
+
+  <div id="start-screen">
+
+    <p>
+      参加者IDを入力してください
+    </p>
+
+    <input
+      id="participant_id_input"
+      type="text"
+    >
+
+
+    <p>
+      Dayを入力してください（1〜3）
+    </p>
+
+    <input
+      id="day_number_input"
+      type="number"
+      min="1"
+      max="3"
+    >
+
+
+    <br>
+
+
+    <button onclick="startExperiment()">
+      次へ
+    </button>
+
+  </div>
+
 
 <script>
 
- const jsPsych = initJsPsych({
 
-  extensions: [
-    {
-      type: jsPsychExtensionPipe,
-      params: {
-
-        experiment_id: "8vGt7oHuZjuJ",
-
-        filename: () =>
-          `dot_${participant_id}_day${dayNumber}.csv`
-
-      }
-    }
-  ],
-
-  on_finish: function() {
-    console.log(jsPsych.data.get().values());
-  }
-
-});
+// ========================================
+// 기본 변수
+// ========================================
 
 
-  const expID = "8vGt7oHuZjuJ";
+const expID =
+  "8vGt7oHuZjuJ";
 
-  let participant_id = "";
 
-  // =========================
-  // Day 저장 변수
-  // =========================
-  let dayNumber = 1;
+let jsPsych;
 
-  let encoding_positions = [];
-  let userSelections = [];
 
-  // =========================
-  // F 클릭 횟수
-  // =========================
-  let fClickCount = 0;
+let participant_id = "";
+
+
+let dayNumber;
+
+
+let encoding_positions = [];
+
+
+let userSelections = [];
+
+
+let fClickCount = 0;
+
 
 let trialNumber = 0;
-let trialResults = [];
-  // =========================
-  // Day별 Dot 위치
-  // =========================
-  const allDayPositions = {
-
-    // Day 1
-    1: [
-      [[4,0],[3,1],[2,2]],
-      [[4,2],[4,3],[4,4]],
-      [[1,0],[1,1],[2,2]]
-    ],
-
-    // Day 2
-    2: [
-      [[0,0],[1,1],[3,3]],
-      [[2,0],[2,4],[4,2]],
-      [[0,4],[2,2],[4,0]]
-    ],
-
-    // Day 3
-    3: [
-      [[0,1],[2,3],[4,2]],
-      [[0,0],[1,2],[3,4]],
-      [[1,4],[3,0],[0,1]]
-    ]
-
-  };
 
 
-  // 실제 사용할 문제
-  let predefinedEncodingPositions = [];
-
-  let currentSetIndex = 0;
+// 실제 Day에서 사용할 문제
+let predefinedEncodingPositions = [];
 
 
-  const fullscreen = {
-    type: jsPsychFullscreen,
-    message: '<p style="font-size: 24px;">2全画表示に切り替えます</p>',
-    button_label: "開始",
-    fullscreen_mode: true
-  };
+let currentSetIndex = 0;
 
 
-  // =========================
-  // ID + Day 입력
-  // =========================
-  const form_trial = {
 
-    type: jsPsychSurveyText,
+// ========================================
+// Day별 Dot 위치
+// ========================================
 
-    questions: [
+
+const allDayPositions = {
+
+
+  // -------------------------
+  // Day 1
+  // -------------------------
+
+  1: [
+
+    [[4,0],[3,1],[2,2]],
+
+    [[4,2],[4,3],[4,4]],
+
+    [[1,0],[1,1],[2,2]]
+
+  ],
+
+
+  // -------------------------
+  // Day 2
+  // -------------------------
+
+  2: [
+
+    [[0,0],[1,1],[3,3]],
+
+    [[2,0],[2,4],[4,2]],
+
+    [[0,4],[2,2],[4,0]]
+
+  ],
+
+
+  // -------------------------
+  // Day 3
+  // -------------------------
+
+  3: [
+
+    [[0,1],[2,3],[4,2]],
+
+    [[0,0],[1,2],[3,4]],
+
+    [[1,4],[3,0],[0,1]]
+
+  ]
+
+};
+
+
+
+// ========================================
+// ID + Day 입력 후 실험 시작
+// ========================================
+
+
+function startExperiment() {
+
+
+  // 입력값 가져오기
+
+  participant_id =
+    document
+      .getElementById(
+        "participant_id_input"
+      )
+      .value
+      .trim();
+
+
+  dayNumber =
+    parseInt(
+      document
+        .getElementById(
+          "day_number_input"
+        )
+        .value
+    );
+
+
+  // -------------------------
+  // 입력 확인
+  // -------------------------
+
+  if (participant_id === "") {
+
+    alert(
+      "参加者IDを入力してください。"
+    );
+
+    return;
+
+  }
+
+
+  if (
+    dayNumber !== 1 &&
+    dayNumber !== 2 &&
+    dayNumber !== 3
+  ) {
+
+    alert(
+      "Dayは1〜3を入力してください。"
+    );
+
+    return;
+
+  }
+
+
+
+  // ========================================
+  // 여기에서 처음으로 jsPsych/DataPipe 시작
+  // ========================================
+
+
+  jsPsych = initJsPsych({
+
+
+    extensions: [
 
       {
-        prompt: '<p style="font-size: 24px;">参加者IDを入力してください</p>',
-        name: "ID",
-        required: true
-      },
 
-      {
-        prompt: '<p style="font-size: 24px;">Dayを入力してください（1〜3）</p>',
-        name: "Day",
-        required: true
-      }
-
-    ],
-
-    button_label: "次へ",
-
-    on_finish: function(data) {
-
-      participant_id = data.response.ID;
-
-      dayNumber = parseInt(data.response.Day);
-
-      // Day에 해당하는 Dot 문제 선택
-      predefinedEncodingPositions =
-        allDayPositions[dayNumber];
-
-      // Day 바뀔 때 trial index 초기화
-      currentSetIndex = 0;
-
-      // 전체 데이터에 ID와 Day 추가
-      jsPsych.data.addProperties({
-        participant_id: participant_id,
-        day: dayNumber
-      });
-
-    }
-  };
+        type:
+          jsPsychExtensionPipe,
 
 
-  const welcome = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus:
-      "<p style='font-size:15pt;'>3つの点の位置を覚えてください。</p>" +
-      "<img src='/datapipe/ex_01.png' style='width:350px; height:350px;'>",
-    choices: ["次へ"]
-  };
+        params: {
 
 
-  const instruction = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus:
-      "<p style='font-size:15pt;'>画面上のFをできるだけ早く押してください。</p>" +
-      "<img src='/datapipe/ex_02.png' style='width:350px; height:350px;'>",
-    choices: ["スタート"]
-  };
+          experiment_id:
+            expID,
 
 
-  // =========================
-  // Encoding
-  // =========================
-  const encoding = {
+          filename: () =>
+            `dot_${participant_id}_day${dayNumber}.csv`
 
-    type: jsPsychHtmlKeyboardResponse,
 
-    stimulus: function() {
-
-  trialNumber++;
-
-      encoding_positions =
-        predefinedEncodingPositions[currentSetIndex];
-
-      currentSetIndex =
-        (currentSetIndex + 1)
-        % predefinedEncodingPositions.length;
-
-      let html =
-        '<p style="font-size: 24px;">点の位置を覚えてください</p>' +
-        '<div class="grid">';
-
-      for (let i = 0; i < 25; i++) {
-
-        const x = i % 5;
-        const y = Math.floor(i / 5);
-
-        html += "<div class='cell'>";
-
-        if (
-          encoding_positions.some(
-            p => p[0] === x && p[1] === y
-          )
-        ) {
-          html += "<div class='circle'></div>";
         }
 
-        html += "</div>";
       }
 
-      html += "</div>";
-
-      return html;
-    },
-
-    choices: "NO_KEYS",
-
-    trial_duration: 3000,
-
-    data: {
-      task: "encoding"
-    }
-
-  };
+    ],
 
 
-  // =========================
-  // Distraction
-  // =========================
-  const distraction = {
+    on_finish: function() {
 
-    type: jsPsychHtmlKeyboardResponse,
-
-    stimulus: function() {
-
-      let html =
-        '<p style="font-size: 24px;">Fを押してください</p>' +
-        '<div class="grid">';
-
-      for (let i = 0; i < 30; i++) {
-
-        const letter =
-          Math.random() < 0.6 ? "F" : "E";
-
-        html += `
-          <div
-            class="distraction-cell"
-            data-letter="${letter}">
-            ${letter}
-          </div>
-        `;
-      }
-
-      html += "</div>";
-
-      return html;
-    },
-
-    choices: "NO_KEYS",
-
-    trial_duration: 8000,
-
-
-    // trial 시작할 때 F 클릭 수 0으로 초기화
-    on_start: function() {
-
-      fClickCount = 0;
-
-    },
-
-
-    // F를 클릭할 때마다 +1
-    on_load: function() {
-
-      document
-        .querySelectorAll(".distraction-cell")
-        .forEach(cell => {
-
-          cell.addEventListener("click", () => {
-
-            const clickedLetter =
-              cell.dataset.letter;
-
-            if (clickedLetter === "F") {
-
-              fClickCount++;
-
-              cell.textContent = "E";
-
-              cell.dataset.letter = "E";
-
-            }
-
-          });
-
-        });
-    },
-
-
-    // =========================
-    // F 클릭 횟수 저장
-    // =========================
-    on_finish: function(data) {
-
-      data.task = "distraction";
-
-      data.f_click_count = fClickCount;
-
-      data.participant_id = participant_id;
-
-      data.day = dayNumber;
+      console.log(
+        jsPsych.data.get().values()
+      );
 
     }
 
-  };
+  });
 
 
-  const rest_20s = {
 
-    type: jsPsychHtmlKeyboardResponse,
-
-    stimulus: "",
-
-    choices: "NO_KEYS",
-
-    trial_duration: 500
-
-  };
+  // ========================================
+  // 선택한 Day의 문제 가져오기
+  // ========================================
 
 
-const retrieval = {
+  predefinedEncodingPositions =
+    allDayPositions[dayNumber];
 
-  type: jsPsychHtmlKeyboardResponse,
+
+  currentSetIndex = 0;
+
+
+  trialNumber = 0;
+
+
+
+  // ========================================
+  // 모든 데이터에 ID / Day 넣기
+  // ========================================
+
+
+  jsPsych.data.addProperties({
+
+    participant_id:
+      participant_id,
+
+    day:
+      dayNumber
+
+  });
+
+
+
+  // 입력 화면 제거
+
+  document
+    .getElementById(
+      "start-screen"
+    )
+    .remove();
+
+
+
+  // 실험 실행
+
+  runExperiment();
+
+}
+
+
+
+// ========================================
+// Fullscreen
+// ========================================
+
+
+const fullscreen = {
+
+  type:
+    jsPsychFullscreen,
+
+
+  message:
+
+    '<p style="font-size:24px;">' +
+
+    '全画面表示に切り替えます' +
+
+    '</p>',
+
+
+  button_label:
+    "開始",
+
+
+  fullscreen_mode:
+    true
+
+};
+
+
+
+// ========================================
+// Welcome
+// ========================================
+
+
+const welcome = {
+
+  type:
+    jsPsychHtmlButtonResponse,
+
+
+  stimulus:
+
+    "<p style='font-size:15pt;'>" +
+
+    "3つの点の位置を覚えてください。" +
+
+    "</p>" +
+
+    "<img src='/datapipe/ex_01.png' " +
+
+    "style='width:350px; height:350px;'>",
+
+
+  choices: [
+    "次へ"
+  ]
+
+};
+
+
+
+// ========================================
+// Instruction
+// ========================================
+
+
+const instruction = {
+
+  type:
+    jsPsychHtmlButtonResponse,
+
+
+  stimulus:
+
+    "<p style='font-size:15pt;'>" +
+
+    "画面上のFをできるだけ早く押してください。" +
+
+    "</p>" +
+
+    "<img src='/datapipe/ex_02.png' " +
+
+    "style='width:350px; height:350px;'>",
+
+
+  choices: [
+    "スタート"
+  ]
+
+};
+
+
+
+// ========================================
+// Encoding
+// ========================================
+
+
+const encoding = {
+
+
+  type:
+    jsPsychHtmlKeyboardResponse,
+
 
   stimulus: function() {
 
-    userSelections = [];
 
-    let html = `
-      <p style="font-size: 24px;">
-        点はどこにありましたか？
-      </p>
+    // trial 번호 증가
 
-      <div class="grid">
-    `;
+    trialNumber++;
 
-    for (let i = 0; i < 25; i++) {
 
-      html += `
-        <div
-          class="cell"
-          data-index="${i}">
-        </div>
-      `;
+
+    // 현재 trial의 점 위치
+
+    encoding_positions =
+      predefinedEncodingPositions[
+        currentSetIndex
+      ];
+
+
+
+    // 다음 trial 준비
+
+    currentSetIndex =
+      (
+        currentSetIndex + 1
+      )
+      %
+      predefinedEncodingPositions.length;
+
+
+
+    let html =
+
+      '<p style="font-size:24px;">' +
+
+      '点の位置を覚えてください' +
+
+      '</p>' +
+
+      '<div class="grid">';
+
+
+
+    for (
+      let i = 0;
+      i < 25;
+      i++
+    ) {
+
+
+      const x =
+        i % 5;
+
+
+      const y =
+        Math.floor(
+          i / 5
+        );
+
+
+      html +=
+        "<div class='cell'>";
+
+
+      if (
+
+        encoding_positions.some(
+
+          p =>
+            p[0] === x &&
+            p[1] === y
+
+        )
+
+      ) {
+
+        html +=
+          "<div class='circle'></div>";
+
+      }
+
+
+      html +=
+        "</div>";
+
     }
 
-    html += `
-      </div>
 
-      <button id="done" disabled>
-        完了
-      </button>
-    `;
+    html +=
+      "</div>";
+
 
     return html;
+
   },
 
-  choices: "NO_KEYS",
 
-  on_load: function() {
-
-    const doneButton =
-      document.getElementById("done");
-
-    document
-      .querySelectorAll(".cell")
-      .forEach((cell, i) => {
-
-        cell.addEventListener("click", () => {
-
-          if (cell.querySelector(".circle")) {
-
-            cell.innerHTML = "";
-
-            userSelections =
-              userSelections.filter(
-                x => x !== i
-              );
-
-          } else {
-
-            cell.innerHTML =
-              "<div class='circle'></div>";
-
-            userSelections.push(i);
-
-          }
-
-          doneButton.disabled =
-            (userSelections.length !== 3);
-
-        });
-
-      });
+  choices:
+    "NO_KEYS",
 
 
-    doneButton.addEventListener(
-      "click",
-      () => {
-
-        if (userSelections.length === 3) {
-
-          // index를 [x,y] 좌표로 변환
-          const response_positions =
-            userSelections.map(index => {
-
-              const x = index % 5;
-              const y = Math.floor(index / 5);
-
-              return [x, y];
-
-            });
+  trial_duration:
+    3000,
 
 
-          // 한 trial의 결과 저장
-          trialResults.push({
+  data: {
 
-            participant_id: participant_id,
+    task:
+      "encoding"
 
-            day: dayNumber,
+  },
 
-            trial: trialNumber,
 
-            encoding_positions:
-              JSON.stringify(encoding_positions),
+  on_finish: function(data) {
 
-            f_click_count:
-              fClickCount,
 
-            response:
-              JSON.stringify(response_positions)
+    data.trial =
+      trialNumber;
 
-          });
 
-          jsPsych.finishTrial({
-
-            task: "retrieval",
-
-            participant_id:
-              participant_id,
-
-            day:
-              dayNumber,
-
-            trial:
-              trialNumber,
-
-            response:
-              JSON.stringify(response_positions),
-
-            encoding_positions:
-              JSON.stringify(encoding_positions)
-
-          });
-
-        }
-
-      });
+    data.encoding_positions =
+      JSON.stringify(
+        encoding_positions
+      );
 
   }
 
@@ -534,44 +716,600 @@ const retrieval = {
 
 
 
-  const debrief = {
-
-    type: jsPsychHtmlButtonResponse,
-
-    stimulus:
-      "<p>下の課題完了ボタンを押た後、ブラウザを閉じて終了してください。ありがとうございました。</p>",
-
-    choices: ["課題完了"]
-
-  };
+// ========================================
+// Distraction
+// ========================================
 
 
+const distraction = {
 
-  // =========================
-  // Timeline
-  // =========================
+
+  type:
+    jsPsychHtmlKeyboardResponse,
+
+
+  stimulus: function() {
+
+
+    let html =
+
+      '<p style="font-size:24px;">' +
+
+      'Fを押してください' +
+
+      '</p>' +
+
+      '<div class="grid">';
+
+
+
+    for (
+      let i = 0;
+      i < 30;
+      i++
+    ) {
+
+
+      const letter =
+
+        Math.random() < 0.6
+        ?
+        "F"
+        :
+        "E";
+
+
+      html += `
+
+        <div
+
+          class="distraction-cell"
+
+          data-letter="${letter}">
+
+          ${letter}
+
+        </div>
+
+      `;
+
+    }
+
+
+    html +=
+      "</div>";
+
+
+    return html;
+
+  },
+
+
+  choices:
+    "NO_KEYS",
+
+
+  trial_duration:
+    8000,
+
+
+
+  // -------------------------
+  // F 카운트 초기화
+  // -------------------------
+
+  on_start: function() {
+
+    fClickCount = 0;
+
+  },
+
+
+
+  // -------------------------
+  // F 클릭
+  // -------------------------
+
+  on_load: function() {
+
+
+    document
+      .querySelectorAll(
+        ".distraction-cell"
+      )
+      .forEach(
+        cell => {
+
+
+          cell.addEventListener(
+            "click",
+            () => {
+
+
+              const clickedLetter =
+                cell.dataset.letter;
+
+
+              if (
+                clickedLetter === "F"
+              ) {
+
+
+                fClickCount++;
+
+
+                cell.textContent =
+                  "E";
+
+
+                cell.dataset.letter =
+                  "E";
+
+              }
+
+            }
+          );
+
+        }
+      );
+
+  },
+
+
+
+  // -------------------------
+  // F 클릭 개수 저장
+  // -------------------------
+
+  on_finish: function(data) {
+
+
+    data.task =
+      "distraction";
+
+
+    data.trial =
+      trialNumber;
+
+
+    data.f_click_count =
+      fClickCount;
+
+
+    data.participant_id =
+      participant_id;
+
+
+    data.day =
+      dayNumber;
+
+  }
+
+};
+
+
+
+// ========================================
+// 짧은 대기
+// ========================================
+
+
+const rest_20s = {
+
+
+  type:
+    jsPsychHtmlKeyboardResponse,
+
+
+  stimulus:
+    "",
+
+
+  choices:
+    "NO_KEYS",
+
+
+  trial_duration:
+    500,
+
+
+  data: {
+
+    task:
+      "rest"
+
+  }
+
+};
+
+
+
+// ========================================
+// Retrieval
+// ========================================
+
+
+const retrieval = {
+
+
+  type:
+    jsPsychHtmlKeyboardResponse,
+
+
+  stimulus: function() {
+
+
+    userSelections = [];
+
+
+    let html = `
+
+      <p style="font-size:24px;">
+
+        点はどこにありましたか？
+
+      </p>
+
+
+      <div class="grid">
+
+    `;
+
+
+
+    for (
+      let i = 0;
+      i < 25;
+      i++
+    ) {
+
+
+      html += `
+
+        <div
+
+          class="cell"
+
+          data-index="${i}">
+
+        </div>
+
+      `;
+
+    }
+
+
+    html += `
+
+      </div>
+
+
+      <button
+        id="done"
+        disabled>
+
+        完了
+
+      </button>
+
+    `;
+
+
+    return html;
+
+  },
+
+
+  choices:
+    "NO_KEYS",
+
+
+
+  on_load: function() {
+
+
+    const doneButton =
+
+      document
+        .getElementById(
+          "done"
+        );
+
+
+
+    document
+      .querySelectorAll(
+        ".cell"
+      )
+      .forEach(
+
+        (cell, i) => {
+
+
+          cell.addEventListener(
+
+            "click",
+
+            () => {
+
+
+              if (
+                cell.querySelector(
+                  ".circle"
+                )
+              ) {
+
+
+                cell.innerHTML =
+                  "";
+
+
+                userSelections =
+
+                  userSelections.filter(
+
+                    x =>
+                      x !== i
+
+                  );
+
+
+              } else {
+
+
+                cell.innerHTML =
+
+                  "<div class='circle'></div>";
+
+
+                userSelections.push(
+                  i
+                );
+
+              }
+
+
+
+              doneButton.disabled =
+
+                (
+                  userSelections.length
+                  !==
+                  3
+                );
+
+            }
+
+          );
+
+        }
+
+      );
+
+
+
+    // ====================================
+    // 완료 버튼
+    // ====================================
+
+
+    doneButton.addEventListener(
+
+      "click",
+
+      () => {
+
+
+        if (
+          userSelections.length === 3
+        ) {
+
+
+          // -------------------------
+          // index → [x,y]
+          // -------------------------
+
+
+          const response_positions =
+
+            userSelections.map(
+
+              index => {
+
+
+                const x =
+                  index % 5;
+
+
+                const y =
+                  Math.floor(
+                    index / 5
+                  );
+
+
+                return [
+                  x,
+                  y
+                ];
+
+              }
+
+            );
+
+
+
+          // -------------------------
+          // Retrieval 종료
+          // -------------------------
+
+
+          jsPsych.finishTrial({
+
+
+            task:
+              "retrieval",
+
+
+            participant_id:
+              participant_id,
+
+
+            day:
+              dayNumber,
+
+
+            trial:
+              trialNumber,
+
+
+            response:
+              JSON.stringify(
+                response_positions
+              ),
+
+
+            encoding_positions:
+              JSON.stringify(
+                encoding_positions
+              ),
+
+
+            f_click_count:
+              fClickCount
+
+
+          });
+
+        }
+
+      }
+
+    );
+
+  }
+
+};
+
+
+
+// ========================================
+// Debrief
+// ========================================
+
+
+const debrief = {
+
+
+  type:
+    jsPsychHtmlButtonResponse,
+
+
+  stimulus:
+
+    "<p>" +
+
+    "下の課題完了ボタンを押した後、" +
+
+    "ブラウザを閉じて終了してください。" +
+
+    "ありがとうございました。" +
+
+    "</p>",
+
+
+  choices: [
+
+    "課題完了"
+
+  ]
+
+};
+
+
+
+// ========================================
+// Experiment Timeline
+// ========================================
+
+
+function runExperiment() {
+
+
   const timeline = [];
-  timeline.push(fullscreen);
-  timeline.push(form_trial);
-  timeline.push(welcome);
-  timeline.push(instruction);
 
 
-  // 하루 3 trial
-  for (let i = 0; i < 2; i++) {
+  timeline.push(
+    fullscreen
+  );
 
-    timeline.push(encoding);
-    timeline.push(distraction);
-    timeline.push(rest_20s);
-    timeline.push(retrieval);
+
+  timeline.push(
+    welcome
+  );
+
+
+  timeline.push(
+    instruction
+  );
+
+
+
+  // ====================================
+  // 하루 3 Trial
+  // ====================================
+
+
+  for (
+    let i = 0;
+    i < 3;
+    i++
+  ) {
+
+
+    timeline.push(
+      encoding
+    );
+
+
+    timeline.push(
+      distraction
+    );
+
+
+    timeline.push(
+      rest_20s
+    );
+
+
+    timeline.push(
+      retrieval
+    );
 
   }
 
 
-  timeline.push(debrief);
 
-jsPsych.run(timeline);
+  timeline.push(
+    debrief
+  );
+
+
+
+  // ====================================
+  // 실험 실행
+  // ====================================
+
+
+  jsPsych.run(
+    timeline
+  );
+
+}
+
 
 </script>
+
+
+</body>
 
 </html>
