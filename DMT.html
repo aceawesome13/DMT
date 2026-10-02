@@ -487,8 +487,6 @@ const retrieval = {
 
           });
 
-
-          // retrieval trial 종료
           jsPsych.finishTrial({
 
             task: "retrieval",
@@ -508,6 +506,10 @@ const retrieval = {
             encoding_positions:
               JSON.stringify(encoding_positions)
 
+          });
+
+        }
+
       });
 
   }
@@ -515,30 +517,6 @@ const retrieval = {
 };
 
 
-      jsPsych.finishTrial({
-
-        task: "retrieval",
-
-        participant_id:
-          participant_id,
-
-        day:
-          dayNumber,
-
-        trial:
-          trialNumber,
-
-        response:
-          JSON.stringify(response_positions),
-
-        encoding_positions:
-          JSON.stringify(encoding_positions)
-
-      });
-
-    }
-
-  });
 
   const debrief = {
 
